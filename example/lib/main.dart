@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:multipart_request/multipart_request.dart';
 
 void main() {
   SystemChrome.setEnabledSystemUIOverlays([]);
@@ -67,7 +68,7 @@ class RecorderExampleState extends State<RecorderExample> {
                 children: <Widget>[
                   Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: new FlatButton(
+                    child: new TextButton(
                       onPressed: () {
                         switch (_currentStatus) {
                           case RecordingStatus.Initialized:
@@ -95,7 +96,12 @@ class RecorderExampleState extends State<RecorderExample> {
                         }
                       },
                       child: _buildText(_currentStatus),
-                      color: Colors.lightBlue,
+                      style: TextButton.styleFrom(
+                        primary: Colors.white,
+                        backgroundColor: Colors.blue,
+                        onSurface: Colors.grey,
+                      ),
+                      //color: Colors.lightBlue,
                     ),
                   ),
                   new FlatButton(
@@ -215,7 +221,10 @@ class RecorderExampleState extends State<RecorderExample> {
     print("Stop recording: ${result.duration}");
     File file = widget.localFileSystem.file(result.path);
     print("File length: ${await file.length()}");
+    // save file to server
     setState(() {
+      sendRequest(result.path);
+
       _current = result;
       _currentStatus = _current.status;
     });
@@ -253,5 +262,28 @@ class RecorderExampleState extends State<RecorderExample> {
   void onPlayAudio() async {
     AudioPlayer audioPlayer = AudioPlayer();
     await audioPlayer.play(_current.path, isLocal: true);
+  }
+
+  void sendRequest(String imagePath) {
+    var request = MultipartRequest();
+
+    print(imagePath);
+    String resturl = "http://192.168.1.33:5000/file-upload";
+    request.setUrl(resturl);
+    request.addFile("file", imagePath);
+
+    Response response = request.send();
+
+    response.onError = () {
+      print("Error");
+    };
+
+    response.onComplete = (response) {
+      print(response);
+    };
+
+    response.progress.listen((int progress) {
+      print("progress from response object " + progress.toString());
+    });
   }
 }
