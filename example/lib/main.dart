@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_audio_recorder/flutter_audio_recorder.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:multipart_request/multipart_request.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
   SystemChrome.setEnabledSystemUIOverlays([]);
@@ -230,6 +231,13 @@ class RecorderExampleState extends State<RecorderExample> {
     });
   }
 
+  Future<String> uploadImage(filename, url) async {
+    var request = http.MultipartRequest('POST', Uri.parse(url));
+    request.files.add(await http.MultipartFile.fromPath('file', filename));
+    var res = await request.send();
+    return res.reasonPhrase;
+  }
+
   Widget _buildText(RecordingStatus status) {
     var text = "";
     switch (_currentStatus) {
@@ -264,26 +272,11 @@ class RecorderExampleState extends State<RecorderExample> {
     await audioPlayer.play(_current.path, isLocal: true);
   }
 
-  void sendRequest(String imagePath) {
-    var request = MultipartRequest();
+  void sendRequest(String imagePath) async {
 
     print(imagePath);
-    String resturl = "http://192.168.1.33:5000/file-upload";
-    request.setUrl(resturl);
-    request.addFile("file", imagePath);
+    var myUrl = 'https://lnpitest.northcentralus.cloudapp.azure.com/files/file-upload';
+    var res = await uploadImage(imagePath, myUrl);
 
-    Response response = request.send();
-
-    response.onError = () {
-      print("Error");
-    };
-
-    response.onComplete = (response) {
-      print(response);
-    };
-
-    response.progress.listen((int progress) {
-      print("progress from response object " + progress.toString());
-    });
   }
 }
