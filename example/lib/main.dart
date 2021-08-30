@@ -141,7 +141,7 @@ class RecorderExampleState extends State<RecorderExample> {
   _init() async {
     try {
       if (await FlutterAudioRecorder.hasPermissions) {
-        String customPath = '/flutter_audio_recorder_';
+        String customPath = '/voice_';
         io.Directory appDocDirectory;
 //        io.Directory appDocDirectory = await getApplicationDocumentsDirectory();
         if (io.Platform.isIOS) {
@@ -224,6 +224,7 @@ class RecorderExampleState extends State<RecorderExample> {
     print("File length: ${await file.length()}");
     // save file to server
     setState(() {
+      print('sending file');
       sendRequest(result.path);
 
       _current = result;
@@ -235,6 +236,7 @@ class RecorderExampleState extends State<RecorderExample> {
     var request = http.MultipartRequest('POST', Uri.parse(url));
     request.files.add(await http.MultipartFile.fromPath('file', filename));
     var res = await request.send();
+    print('finished sending');
     return res.reasonPhrase;
   }
 
